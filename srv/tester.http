@@ -1,0 +1,170 @@
+// ### - indicate service call, it's mandatory to use
+
+###Get the Service document
+http://localhost:4004/odata/v4/SrvOrdStage
+Authorization: Basic Kiran:
+
+###Get the Service document
+http://localhost:4004/odata/v4/SrvOrdStage/$metadata
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJqaWQiOiJSRy9FbjNBQnNISUhxTG1zVGk3ZHFpeDRscVROTy95TUJJbjlBY1RETFpVPSIsImFsZyI6IlJTMjU2Iiwiamt1IjoiaHR0cHM6Ly92ZW5kb3Jwb3J0YWwta3poejM5MWwuYXV0aGVudGljYXRpb24udXMxMC5oYW5hLm9uZGVtYW5kLmNvbS90b2tlbl9rZXlzIiwia2lkIjoiZGVmYXVsdC1qd3Qta2V5LTE5MzMwMmRmZTEifQ.eyJzdWIiOiJjMjRjMzcyMy0wNmY4LTQ3ZjAtOTQ4Yy05ZDE5OWM0ZDdkMjgiLCJ4cy51c2VyLmF0dHJpYnV0ZXMiOnt9LCJ1c2VyX25hbWUiOiJLaXJhbi5ZZXR1a3VyaUBhbmFuZC1wYWcuY29tIiwib3JpZ2luIjoic2FwLmRlZmF1bHQiLCJpc3MiOiJodHRwczovL3ZlbmRvcnBvcnRhbC1remh6MzkxbC5hdXRoZW50aWNhdGlvbi51czEwLmhhbmEub25kZW1hbmQuY29tL29hdXRoL3Rva2VuIiwieHMuc3lzdGVtLmF0dHJpYnV0ZXMiOnsieHMucm9sZWNvbGxlY3Rpb25zIjpbIlNBUCBIQU5BIENsb3VkIEFkbWluaXN0cmF0b3IiLCJDSUNEIFNlcnZpY2UgRGV2ZWxvcGVyIiwiU0FQIEhBTkEgQ2xvdWQgRGF0YSBQdWJsaXNoZXIgQWRtaW5pc3RyYXRvciIsIkJ1c2luZXNzX0FwcGxpY2F0aW9uX1N0dWRpb19EZXZlbG9wZXIiLCJDbG91ZCBDb25uZWN0b3IgQWRtaW5pc3RyYXRvciIsIldvcmt6b25lX0FkbWluIiwiTGF1bmNocGFkX0V4dGVybmFsX1VzZXIiLCJEZXN0aW5hdGlvbiBGcmFnbWVudCBBZG1pbmlzdHJhdG9yIiwiUkNfVlBLX0NBUCIsInJjX2N2cF9jYXAiLCJEZXN0aW5hdGlvbiBBZG1pbmlzdHJhdG9yIiwiQnVzaW5lc3NfQXBwbGljYXRpb25fU3R1ZGlvX0V4dGVuc2lvbl9EZXBsb3llciIsIkJ1c2luZXNzX0FwcGxpY2F0aW9uX1N0dWRpb19BZG1pbmlzdHJhdG9yIiwiU3ViYWNjb3VudCBBZG1pbmlzdHJhdG9yIiwiQ29ubmVjdGl2aXR5IGFuZCBEZXN0aW5hdGlvbiBBZG1pbmlzdHJhdG9yIiwiU0FQIEhBTkEgQ2xvdWQgU2VjdXJpdHkgQWRtaW5pc3RyYXRvciIsIlN1YmFjY291bnQgU2VydmljZSBBZG1pbmlzdHJhdG9yIiwiU0FQIEhBTkEgQ2xvdWQgVmlld2VyIiwiQ0lDRCBTZXJ2aWNlIEFkbWluaXN0cmF0b3IiLCJMYXVuY2hwYWRfQWRtaW4iLCJMYXVuY2hwYWRfQWR2YW5jZWRfVGhlbWluZyIsInNhcF9zdWJhY2NvdW50X2V2ZXJ5b25lIiwiQURTX0FkbWluIiwiRE1TX0FkbWluIiwiVmlld2VyIChjdnApIiwiRWRpdG9yIChjdnApIiwiQ0lTX0FkbWluIl19LCJjbGllbnRfaWQiOiJzYi1jdnAtYW5hbmRwYWctdnBkIXQ1MDI4MjEiLCJleHRfYXR0ciI6eyJlbmhhbmNlciI6IlhTVUFBIiwic3ViYWNjb3VudGlkIjoiMTMzMjkwZjctNjIyYS00MTM1LTkyODktZjMzMjFjNTNkYTUyIiwiemRuIjoidmVuZG9ycG9ydGFsLWt6aHozOTFsIn0sInVzZXJfdXVpZCI6IjAyYjBkZjc0LWFkMGYtNDkzZS05ZWU0LTYwYjU4YmUzYWQ4YSIsInppZCI6IjEzMzI5MGY3LTYyMmEtNDEzNS05Mjg5LWYzMzIxYzUzZGE1MiIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsImF6cCI6InNiLWN2cC1hbmFuZHBhZy12cGQhdDUwMjgyMSIsInNjb3BlIjpbImN2cC1hbmFuZHBhZy12cGQhdDUwMjgyMS5FZGl0Iiwib3BlbmlkIiwiY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxLkRpc3BsYXkiXSwiYXV0aF90aW1lIjoxNzYyMTM1MDA4LCJleHAiOjE3NjIxMzU5MDgsImlhdCI6MTc2MjEzNTAwOCwianRpIjoiNDE4Yjk3MjQwNTY3NGE5ZDg3ZWUzNDVmNWVlZmYzNWMiLCJlbWFpbCI6IktpcmFuLllldHVrdXJpQGFuYW5kLXBhZy5jb20iLCJnaXZlbl9uYW1lIjoiS2lyYW4iLCJhdWQiOlsiY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIiwib3BlbmlkIiwic2ItY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIl0sInVzZXJfaWQiOiJjMjRjMzcyMy0wNmY4LTQ3ZjAtOTQ4Yy05ZDE5OWM0ZDdkMjgiLCJmYW1pbHlfbmFtZSI6IllldHVrdXJpIiwicmV2X3NpZyI6IjU3MGU5ZWFjIiwiY2lkIjoic2ItY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIn0.nUn6434Z81PeKTROduTOg9Oun8BJ_d2UP_szriq9JmU7qaSj7_qmdK8PKl2CnMW2Dab4y38aHxr2kQPS2JWE9NlwlM2nrsVVIzcMZF0SvDjXL09MsHuG86-uxwBhPLaW26RT5eyH7CBxKOjsKxb2xPgvS-FOaf2nJ015dgY02HRkKCt4Tp0-LAH_r41SjWBkEnvdsfKxJafNE-b4Y0RkGBoM1WF0IO039G0QxItoT7wdZLp94Q_P1Gx85XB2NFGdiW08dNDOYYuaEGshsDwsgzcoVWl1ujLktAZjQZxh-DUgB2nPRNbvIi1XXSXwNePFB4kVS2UIy2I49eRlevzwAw
+
+###Get the Service document
+POST http://localhost:4004/odata/v4/SrvOrdStage/Header
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJqaWQiOiJSRy9FbjNBQnNISUhxTG1zVGk3ZHFpeDRscVROTy95TUJJbjlBY1RETFpVPSIsImFsZyI6IlJTMjU2Iiwiamt1IjoiaHR0cHM6Ly92ZW5kb3Jwb3J0YWwta3poejM5MWwuYXV0aGVudGljYXRpb24udXMxMC5oYW5hLm9uZGVtYW5kLmNvbS90b2tlbl9rZXlzIiwia2lkIjoiZGVmYXVsdC1qd3Qta2V5LTE5MzMwMmRmZTEifQ.eyJzdWIiOiJjMjRjMzcyMy0wNmY4LTQ3ZjAtOTQ4Yy05ZDE5OWM0ZDdkMjgiLCJ4cy51c2VyLmF0dHJpYnV0ZXMiOnt9LCJ1c2VyX25hbWUiOiJLaXJhbi5ZZXR1a3VyaUBhbmFuZC1wYWcuY29tIiwib3JpZ2luIjoic2FwLmRlZmF1bHQiLCJpc3MiOiJodHRwczovL3ZlbmRvcnBvcnRhbC1remh6MzkxbC5hdXRoZW50aWNhdGlvbi51czEwLmhhbmEub25kZW1hbmQuY29tL29hdXRoL3Rva2VuIiwieHMuc3lzdGVtLmF0dHJpYnV0ZXMiOnsieHMucm9sZWNvbGxlY3Rpb25zIjpbIlNBUCBIQU5BIENsb3VkIEFkbWluaXN0cmF0b3IiLCJDSUNEIFNlcnZpY2UgRGV2ZWxvcGVyIiwiU0FQIEhBTkEgQ2xvdWQgRGF0YSBQdWJsaXNoZXIgQWRtaW5pc3RyYXRvciIsIkJ1c2luZXNzX0FwcGxpY2F0aW9uX1N0dWRpb19EZXZlbG9wZXIiLCJDbG91ZCBDb25uZWN0b3IgQWRtaW5pc3RyYXRvciIsIldvcmt6b25lX0FkbWluIiwiTGF1bmNocGFkX0V4dGVybmFsX1VzZXIiLCJEZXN0aW5hdGlvbiBGcmFnbWVudCBBZG1pbmlzdHJhdG9yIiwiUkNfVlBLX0NBUCIsInJjX2N2cF9jYXAiLCJEZXN0aW5hdGlvbiBBZG1pbmlzdHJhdG9yIiwiQnVzaW5lc3NfQXBwbGljYXRpb25fU3R1ZGlvX0V4dGVuc2lvbl9EZXBsb3llciIsIkJ1c2luZXNzX0FwcGxpY2F0aW9uX1N0dWRpb19BZG1pbmlzdHJhdG9yIiwiU3ViYWNjb3VudCBBZG1pbmlzdHJhdG9yIiwiQ29ubmVjdGl2aXR5IGFuZCBEZXN0aW5hdGlvbiBBZG1pbmlzdHJhdG9yIiwiU0FQIEhBTkEgQ2xvdWQgU2VjdXJpdHkgQWRtaW5pc3RyYXRvciIsIlN1YmFjY291bnQgU2VydmljZSBBZG1pbmlzdHJhdG9yIiwiU0FQIEhBTkEgQ2xvdWQgVmlld2VyIiwiQ0lDRCBTZXJ2aWNlIEFkbWluaXN0cmF0b3IiLCJMYXVuY2hwYWRfQWRtaW4iLCJMYXVuY2hwYWRfQWR2YW5jZWRfVGhlbWluZyIsInNhcF9zdWJhY2NvdW50X2V2ZXJ5b25lIiwiQURTX0FkbWluIiwiRE1TX0FkbWluIiwiVmlld2VyIChjdnApIiwiRWRpdG9yIChjdnApIiwiQ0lTX0FkbWluIl19LCJjbGllbnRfaWQiOiJzYi1jdnAtYW5hbmRwYWctdnBkIXQ1MDI4MjEiLCJleHRfYXR0ciI6eyJlbmhhbmNlciI6IlhTVUFBIiwic3ViYWNjb3VudGlkIjoiMTMzMjkwZjctNjIyYS00MTM1LTkyODktZjMzMjFjNTNkYTUyIiwiemRuIjoidmVuZG9ycG9ydGFsLWt6aHozOTFsIn0sInVzZXJfdXVpZCI6IjAyYjBkZjc0LWFkMGYtNDkzZS05ZWU0LTYwYjU4YmUzYWQ4YSIsInppZCI6IjEzMzI5MGY3LTYyMmEtNDEzNS05Mjg5LWYzMzIxYzUzZGE1MiIsImdyYW50X3R5cGUiOiJwYXNzd29yZCIsImF6cCI6InNiLWN2cC1hbmFuZHBhZy12cGQhdDUwMjgyMSIsInNjb3BlIjpbImN2cC1hbmFuZHBhZy12cGQhdDUwMjgyMS5FZGl0Iiwib3BlbmlkIiwiY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxLkRpc3BsYXkiXSwiYXV0aF90aW1lIjoxNzYyMTM1MDA4LCJleHAiOjE3NjIxMzU5MDgsImlhdCI6MTc2MjEzNTAwOCwianRpIjoiNDE4Yjk3MjQwNTY3NGE5ZDg3ZWUzNDVmNWVlZmYzNWMiLCJlbWFpbCI6IktpcmFuLllldHVrdXJpQGFuYW5kLXBhZy5jb20iLCJnaXZlbl9uYW1lIjoiS2lyYW4iLCJhdWQiOlsiY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIiwib3BlbmlkIiwic2ItY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIl0sInVzZXJfaWQiOiJjMjRjMzcyMy0wNmY4LTQ3ZjAtOTQ4Yy05ZDE5OWM0ZDdkMjgiLCJmYW1pbHlfbmFtZSI6IllldHVrdXJpIiwicmV2X3NpZyI6IjU3MGU5ZWFjIiwiY2lkIjoic2ItY3ZwLWFuYW5kcGFnLXZwZCF0NTAyODIxIn0.nUn6434Z81PeKTROduTOg9Oun8BJ_d2UP_szriq9JmU7qaSj7_qmdK8PKl2CnMW2Dab4y38aHxr2kQPS2JWE9NlwlM2nrsVVIzcMZF0SvDjXL09MsHuG86-uxwBhPLaW26RT5eyH7CBxKOjsKxb2xPgvS-FOaf2nJ015dgY02HRkKCt4Tp0-LAH_r41SjWBkEnvdsfKxJafNE-b4Y0RkGBoM1WF0IO039G0QxItoT7wdZLp94Q_P1Gx85XB2NFGdiW08dNDOYYuaEGshsDwsgzcoVWl1ujLktAZjQZxh-DUgB2nPRNbvIi1XXSXwNePFB4kVS2UIy2I49eRlevzwAw
+Content-Type: application/json
+
+{
+  "msgID": "MSG20251102-001",
+  "orderID": "SO-100045",
+  "msgCreatedDate": "2025-11-02T14:35:00Z",
+  "orderType": "PM01",
+  "salesOrganization": "1000",
+  "distributionChannel": "10",
+  "division": "01",
+  "salesOffice": "2000",
+  "salesGroup": "210",
+  "description": "Preventive Maintenance Service",
+  "language": "EN",
+  "soldToParty": "40000123",
+  "soldToPartyName": "Acme Corporation",
+  "serviceParty": "50004567",
+  "servicePartyName": "Cintas Service Team",
+  "requestType": "PM",
+  "serviceType": "Inspection",
+  "serviceSubType": "Annual",
+  "priority": "1",
+  "fnaStatus": "NEW",
+  "confirmationNeeded": "Yes",
+  "requestedStartDateTime": "2025-11-10T08:00:00Z",
+  "requestedEndDateTime": "2025-11-10T17:00:00Z",
+  "documentDataTimestamp": "2025-11-02T14:35:00Z",
+  "customerPO": "PO-5567",
+  "customerRef10": "CUSTREF-1001",
+  "customerName3": "Acme Plant South",
+  
+  "items": [
+    {
+      "itemNo": 10,
+      "parentItem": 0,
+      "product": "MAT-001",
+      "productDesc": "Backflow Preventer",
+      "language": "EN",
+      "quantity": 2.000,
+      "quantityUnit": "EA",
+      "itemCategory": "SERV",
+      "isOpen": true,
+      "isReleased": false,
+      "isCompleted": false,
+      "isRejected": false,
+      "userStatus": "NEW",
+      "fnaStatus": "NEW",
+      "confirmationNeeded": "N",
+      "frequency": "Annual",
+      "materialGroup2": "BFP",
+      "materialGroup2Desc": "Backflow",
+      "texts": [
+        {
+          "longTextTypeID": "NOTE1",
+          "text": "Perform backflow inspection on both units per city code.",
+          "language": "EN"
+        }
+      ]
+    },
+    {
+      "itemNo": 20,
+      "parentItem": 0,
+      "product": "MAT-002",
+      "productDesc": "Check Valve Assembly",
+      "language": "EN",
+      "quantity": 1.000,
+      "quantityUnit": "EA",
+      "itemCategory": "SERV",
+      "isOpen": true,
+      "isReleased": false,
+      "isCompleted": false,
+      "isRejected": false,
+      "userStatus": "NEW",
+      "fnaStatus": "NEW",
+      "confirmationNeeded": "N",
+      "frequency": "Annual",
+      "materialGroup2": "CHK",
+      "materialGroup2Desc": "Check Valve",
+      "texts": [
+        {
+          "longTextTypeID": "NOTE2",
+          "text": "Inspect and test the check valve assembly for leaks.",
+          "language": "EN"
+        }
+      ]
+    }
+  ],
+
+  "partners": [
+    {
+      "partnerFunction": "SP",
+      "partnerNumber": "50004567",
+      "partnerName": "Cintas Service Team",
+      "isMainPartner": true,
+      "numberType": "EMP",
+      "functionCategory": "TECH",
+      "houseNumber": "200",
+      "streetName": "Main Street",
+      "cityName": "Dallas",
+      "region": "TX",
+      "postalCode": "75201",
+      "country": "US",
+      "dialCode": "+1",
+      "phoneNumber": "2145557890",
+      "phoneExtension": "123",
+      "emailAddress": "service@cintas.com"
+    },
+    {
+      "partnerFunction": "SL",
+      "partnerNumber": "40000123",
+      "partnerName": "Acme Corporation",
+      "isMainPartner": false,
+      "numberType": "CUST",
+      "functionCategory": "CUST",
+      "houseNumber": "500",
+      "streetName": "Industrial Blvd",
+      "cityName": "Houston",
+      "region": "TX",
+      "postalCode": "77001",
+      "country": "US",
+      "dialCode": "+1",
+      "phoneNumber": "7135551234",
+      "phoneExtension": "",
+      "emailAddress": "purchasing@acme.com"
+    }
+  ],
+
+  "appointments": [
+    {
+      "apptType": "MAIN",
+      "apptStartDateTime": "2025-11-10T08:00:00Z",
+      "apptStartTimeZone": "CST",
+      "apptEndDateTime": "2025-11-10T12:00:00Z",
+      "apptEndTimeZone": "CST"
+    },
+    {
+      "apptType": "FOLLOWUP",
+      "apptStartDateTime": "2025-11-11T09:00:00Z",
+      "apptStartTimeZone": "CST",
+      "apptEndDateTime": "2025-11-11T11:00:00Z",
+      "apptEndTimeZone": "CST"
+    }
+  ],
+
+  "texts": [
+    {
+      "longTextTypeID": "HDR1",
+      "text": "Annual maintenance service for all backflow preventers.",
+      "language": "EN"
+    },
+    {
+      "longTextTypeID": "HDR2",
+      "text": "Ensure inspection is compliant with municipal water code.",
+      "language": "EN"
+    }
+  ]
+}

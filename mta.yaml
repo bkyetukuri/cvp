@@ -1,0 +1,65 @@
+_schema-version: 3.3.0
+ID: cvp
+version: 1.0.0
+description: "Cintas Vendor Portal project."
+parameters:
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+modules:
+  - name: cvp-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: cvp-auth
+      - name: cvp-db
+
+  - name: cvp-db-deployer
+    type: hdb
+    path: gen/db
+    parameters:
+      buildpack: nodejs_buildpack
+    requires:
+      - name: cvp-db
+
+resources:
+  - name: cvp-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: cvp-anandpag-vpd
+        tenant-mode: dedicated
+        role-collections:
+          - name: Viewer (cvp)
+            description: generated
+            role-template-references:
+              - $XSAPPNAME.Viewer
+          - name: Editor (cvp)
+            description: generated
+            role-template-references:
+              - $XSAPPNAME.Editor
+          - name: userattributes (cvp)
+            description: generated
+            role-template-references:
+              - $XSAPPNAME.userattributes
+  - name: cvp-db
+    type: com.sap.xs.hdi-container
+    parameters:
+      service: hana
+      service-plan: hdi-shared

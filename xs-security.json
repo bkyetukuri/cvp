@@ -1,0 +1,53 @@
+{
+  "xsappname": "cvp-ui",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.Display",
+      "description": "display"
+    },
+    {
+      "name": "$XSAPPNAME.Edit",
+      "description": "edit"
+    },
+    {
+      "name": "$XSAPPNAME.Viewer",
+      "description": "Viewer"
+    },
+    {
+      "name": "$XSAPPNAME.Editor",
+      "description": "Editor"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "Viewer",
+      "description": "Access Read-only data",
+      "default-role-name": "Viewer: Authorized to Read All data",
+      "scope-references": [
+        "$XSAPPNAME.Display"
+      ],
+      "attribute-references": []
+    },
+    {
+      "name": "Editor",
+      "description": "Edit service orders",
+      "default-role-name": "Viewer: Authorized to Edit All data",
+      "scope-references": [
+        "$XSAPPNAME.Edit"
+      ]
+    }
+  ],
+  "authorities": [
+    "$ACCEPT_GRANTED_AUTHORITIES"
+  ],
+  "oauth2-configuration": {
+    "token-validity": 900,
+    "redirect-uris": [
+      "https://*.cfapps.us10-001.hana.ondemand.com/login/callback",
+      "https://*.cfapps.us10-001.hana.ondemand.com/**"
+    ]
+  },
+  "xsenableasyncservice": "true"
+}
