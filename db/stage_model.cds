@@ -41,7 +41,7 @@ entity SrvOrder_H : cuid {
     serviceSubType         : String;
     priority               : String(1);
     fnaStatus              : String(3);
-    confirmationNeeded     : String;
+    confirmationNeeded     : Boolean;
     requestedStartDateTime : Timestamp;
     requestedEndDateTime   : Timestamp;
     documentDataTimestamp  : Timestamp;
