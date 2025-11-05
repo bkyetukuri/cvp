@@ -48,7 +48,8 @@ entity SrvOrder_H : cuid {
     customerPO             : String;
     customerRef10          : String;
     customerName3          : String;
-
+    processedFlag          : Boolean default false;
+    
     items                  : Composition of many SrvOrder_I
                                  on items.parent = $self;
     partners               : Composition of many SrvOrderPartner_H

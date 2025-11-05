@@ -1,6 +1,6 @@
 namespace txn;
 
-using {cuid} from '@sap/cds/common';
+using {cuid, managed} from '@sap/cds/common';
 // ============================================================
 // ============================================================
 //  STAGING TABLES (Raw Payload Layer - No Managed Fields)
@@ -8,8 +8,8 @@ using {cuid} from '@sap/cds/common';
 // ============================================================
 
 @cds.persistence.name: 'TXN_SORD_H'
-entity SORD_H {
-    key ordSource              : String(2);
+entity SORD_H : managed {
+    key ordSource              : String(2) default 'SO';
     key orderID                : String(35);
         LastUpdatedTSFromS4    : Timestamp;
         orderType              : String(4);
@@ -36,23 +36,28 @@ entity SORD_H {
         customerPO             : String;
         customerRef10          : String;
         customerName3          : String;
+        plannedStartDateTime   : Timestamp;
+        plannedEndDateTime     : Timestamp;
+        printed                : Boolean;
 
         items                  : Composition of many SORD_I
                                      on items.orderID = $self.orderID;
-        partners               : Composition of many SORDPartner
+        partners               : Composition of many SORD_Partner
                                      on  partners.orderID = $self.orderID
                                      and partners.itemNo  = 0;
-        appointments           : Composition of many SORDAppt
+        appointments           : Composition of many SORD_Appt
                                      on  appointments.orderID = $self.orderID
                                      and appointments.itemNo  = 0;
-        texts                  : Composition of many SORDText
+        texts                  : Composition of many SORD_Text
                                      on  texts.orderID = $self.orderID
                                      and texts.itemNo  = 0;
+        communication          : Composition of many SORD_Comm 
+                                     on communication.orderID = $self.orderID;
 
 }
 
 @cds.persistence.name: 'TXN_SORD_I'
-entity SORD_I {
+entity SORD_I : managed {
     key orderID            : String(35);
     key itemNo             : Integer;
         parentItem         : Integer;
@@ -68,12 +73,12 @@ entity SORD_I {
         isRejected         : Boolean;
         userStatus         : String(5);
         fnaStatus          : String(3);
-        confirmationNeeded : String;
+        confirmationNeeded : Boolean;
         frequency          : String;
         materialGroup2     : String(3);
         materialGroup2Desc : String(40);
 
-        texts              : Composition of many SORDText
+        texts              : Composition of many SORD_Text
                                  on  texts.orderID = $self.orderID
                                  and texts.itemNo  = $self.itemNo;
 }
@@ -89,7 +94,7 @@ entity SORD_I {
         'partnerNumber'
     ]
 }]
-entity SORDPartner : cuid {
+entity SORD_Partner : cuid, managed  {
     orderID          : String(35);
     itemNo           : Integer;
     partnerFunction  : String(8);
@@ -111,7 +116,7 @@ entity SORDPartner : cuid {
 }
 
 @cds.persistence.name: 'TXN_SORD_APPT'
-entity SORDAppt {
+entity SORD_Appt : managed {
     key orderID           : String(35);
     key itemNo            : Integer;
     key apptType          : String;
@@ -122,10 +127,16 @@ entity SORDAppt {
 }
 
 @cds.persistence.name: 'TXN_SORD_TEXT'
-entity SORDText {
+entity SORD_Text : managed {
     key orderID        : String(35);
     key itemNo         : Integer;
     key longTextTypeID : String(5);
         text           : String;
         language       : String(9);
+}
+
+@cds.persistence.name: 'TXN_SORD_COMM'
+entity SORD_Comm : managed {
+    key orderID        : String(35);
+        messages       : String;
 }

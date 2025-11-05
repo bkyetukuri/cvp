@@ -26,6 +26,7 @@ modules:
     requires:
       - name: cvp-auth
       - name: cvp-db
+      - name: cvp-job-scheduler
 
   - name: cvp-db-deployer
     type: hdb
@@ -63,3 +64,10 @@ resources:
     parameters:
       service: hana
       service-plan: hdi-shared
+  - name: cvp-job-scheduler
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: jobscheduler
+      service-plan: standard
+      config:
+        enable-xsuaa-support: true
