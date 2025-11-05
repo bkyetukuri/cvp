@@ -18,9 +18,14 @@ module.exports = async function () {
     SORD_Text
   } = cds.entities('txn')
 
+  const LOG = cds.log('etl')
+  const { ETL_Log } = cds.entities('ETL_Log')
+
+
   this.on('runETL', async () => {
     const tx = cds.transaction()
-
+    let successCount = 0, failCount = 0
+    
     try {
       // ----------------------------------------------------
       // 1️⃣  Get latest message per orderID
@@ -33,6 +38,8 @@ module.exports = async function () {
      .groupBy('orderID')
 
       console.log(`Found ${latestOrders.length} unprocessed orders in staging.`)
+      //LOG.info(`Found ${latestOrders.length} unprocessed orders in staging.`)
+
 
       // ----------------------------------------------------
       // 2️⃣  Loop through each latest record
@@ -141,6 +148,10 @@ module.exports = async function () {
         }
 
         // 4.c Appointments
+
+        let plannedFromDateTime, plannedFromTimeZone
+        let plannedToDateTime, plannedToTimeZone
+
         const appts = await SELECT.from(SrvOrderAppt_H).where({ parent_ID: latestHeader.ID })
         for (const a of appts) {
           await UPSERT.into(SORD_Appt).entries({
@@ -152,7 +163,31 @@ module.exports = async function () {
             apptEndDateTime: a.apptEndDateTime,
             apptEndTimeZone: a.apptEndTimeZone
           })
+
+          if (a.apptType === 'SPLA_PLANFR') {
+            plannedFromDateTime = a.apptStartDateTime
+            plannedFromTimeZone = a.apptStartTimeZone
+          }
+
+          if (a.apptType === 'SPLA_PLANTO') {
+            plannedToDateTime = a.apptEndDateTime
+            plannedToTimeZone = a.apptEndTimeZone
+          }
         }
+
+        // Update SORD_H with planned from/to info
+        if (plannedFromDateTime || plannedToDateTime) {
+          await UPDATE(SORD_H)
+            .set({
+              plannedFromDateTime,
+              plannedFromTimeZone,
+              plannedToDateTime,
+              plannedToTimeZone
+            })
+            .where({ orderID: latestHeader.orderID })
+        }
+        
+
 
         // 4️⃣ Texts handling (Header + Item)
         // ---- 4.d Header Texts ----
@@ -175,7 +210,7 @@ module.exports = async function () {
         for (const it of itemTexts) {
             await UPSERT.into(SORD_Text).entries({
             orderID: latestHeader.orderID,
-            itemNo: i.itemNo, // item-level → use itemNo
+            itemNo: i.itemNo, 
             longTextTypeID: it.longTextTypeID,
             text: it.text,
             language: it.language
@@ -195,13 +230,34 @@ module.exports = async function () {
       .where({ processedFlag: true })
       .and('msgCreatedDate <', new Date(Date.now() - 7*24*60*60*1000)); // older than 7 days
       */
-     
+
       await tx.commit()
       return `ETL completed: ${latestOrders.length} orders processed and flagged.`
+      //LOG.info(`Order ${latestHeader.orderID} (msgCreatedDate: ${latestHeader.msgCreatedDate}) processed successfully.`)
+
+      // Write to ETL_Log
+      await INSERT.into(ETL_Log).entries({
+      msgID: latestHeader.msgID,
+      orderID: latestHeader.orderID,
+      msgCreatedDate: latestHeader.msgCreatedDate,
+      status: 'SUCCESS',
+      message: `${recordType} order processed successfully`
+      })
 
     } catch (err) {
       await tx.rollback()
       console.error(err)
+      //LOG.error(`Failed processing order ${latestHeader.orderID} (msgCreatedDate: ${latestHeader.msgCreatedDate}) — ${err.message}`)
+      
+
+      await INSERT.into(ETL_Log).entries({
+      msgID: latestHeader.msgID,
+      orderID: latestHeader.orderID,
+      msgCreatedDate: latestHeader.msgCreatedDate,
+      status: 'FAILED',
+      message: err.message
+      })
+
       return `ETL failed: ${err.message}`
     }
   })

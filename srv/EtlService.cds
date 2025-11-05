@@ -8,10 +8,11 @@ service ETLService {
 
     entity ETL_Log : managed {
     key ID              : UUID;
+    msgID               : String(32);
     orderID             : String(35);
     msgCreatedDate      : Timestamp;
     status              : String(10);      // SUCCESS | FAILED
-    message             : String(500);
+    message             : String;
     runTimestamp        : Timestamp = CURRENT_TIMESTAMP;
     }
 }

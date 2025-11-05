@@ -36,8 +36,10 @@ entity SORD_H : managed {
         customerPO             : String;
         customerRef10          : String;
         customerName3          : String;
-        plannedStartDateTime   : Timestamp;
-        plannedEndDateTime     : Timestamp;
+        plannedFromDateTime    : Timestamp;
+        plannedToDateTime      : Timestamp;
+        plannedFromTimeZone    : String(3);
+        plannedToTimeZone      : String(3);
         printed                : Boolean;
 
         items                  : Composition of many SORD_I
