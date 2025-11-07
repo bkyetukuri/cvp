@@ -1,6 +1,6 @@
 namespace stg;
 
-using { cuid } from '@sap/cds/common';
+using { cuid, managed } from '@sap/cds/common';
 // ============================================================
 // ============================================================
 //  STAGING TABLES (Raw Payload Layer - No Managed Fields)
@@ -90,6 +90,10 @@ entity SrvOrder_I : cuid {
     materialGroup2     : String(3);
     materialGroup2Desc : String(40);
 
+    partners           : Composition of many SrvOrderPartner_I
+                                 on partners.parent = $self;
+    appointments       : Composition of many SrvOrderAppt_I
+                                 on appointments.parent = $self;
     texts              : Composition of many SrvOrderText_I
                              on texts.parent = $self;
 }
@@ -122,6 +126,34 @@ entity SrvOrderPartner_H : cuid {
     emailAddress     : String(255);
 }
 
+@cds.persistence.name: 'STG_SRVORDERPARTNER_I'
+@cds.persistence.indexes: [
+    {
+        name    : 'IDX_SOIP_ORDID',
+        unique  : false,
+        elements: ['parent_ID']
+    }
+]
+entity SrvOrderPartner_I : cuid {
+    parent           : Association to SrvOrder_I;
+    partnerFunction  : String(8);
+    partnerNumber    : String(10);
+    partnerName      : String(60);
+    isMainPartner    : Boolean;
+    numberType       : String(60);
+    functionCategory : String(4);
+    houseNumber      : String(10);
+    streetName       : String(60);
+    cityName         : String(40);
+    region           : String(3);
+    postalCode       : String(10);
+    country          : String(3);
+    dialCode         : String(10);
+    phoneNumber      : String(10);
+    phoneExtension   : String(10);
+    emailAddress     : String(255);
+}
+
 @cds.persistence.name: 'STG_SRVORDERAPPT_H'
 @cds.persistence.indexes: [
     {
@@ -133,6 +165,16 @@ entity SrvOrderPartner_H : cuid {
 entity SrvOrderAppt_H : cuid {
 
     parent            : Association to SrvOrder_H;
+    apptType          : String;
+    apptStartDateTime : Timestamp;
+    apptStartTimeZone : String(3);
+    apptEndDateTime   : Timestamp;
+    apptEndTimeZone   : String(3);
+}
+
+entity SrvOrderAppt_I : cuid {
+
+    parent            : Association to SrvOrder_I;
     apptType          : String;
     apptStartDateTime : Timestamp;
     apptStartTimeZone : String(3);
@@ -170,4 +212,15 @@ entity SrvOrderText_I : cuid {
     longTextTypeID : String(5);
     text           : String;
     language       : String(9);
+}
+
+@cds.persistence.name: 'STG_ETL_LOG'
+entity ETL_Log : managed {
+key ID              : UUID;
+msgID               : String(32);
+orderID             : String(35);
+msgCreatedDate      : Timestamp;
+status              : String(60);      // SUCCESS | FAILED
+message             : String;
+runTimestamp        : Timestamp = CURRENT_TIMESTAMP;
 }

@@ -5,9 +5,12 @@ module.exports = async function () {
     SrvOrder_H,
     SrvOrder_I,
     SrvOrderPartner_H,
+    SrvOrderPartner_I,
     SrvOrderAppt_H,
+    SrvOrderAppt_I,
     SrvOrderText_H,
-    SrvOrderText_I
+    SrvOrderText_I,
+    ETL_Log
   } = cds.entities('stg');
 
   const {
@@ -15,8 +18,7 @@ module.exports = async function () {
     SORD_I,
     SORD_Partner,
     SORD_Appt,
-    SORD_Text,
-    ETL_Log
+    SORD_Text
   } = cds.entities('txn');
 
   //const { ETL_Log } = cds.entities('txn.ETL_Log'); 
@@ -197,7 +199,7 @@ module.exports = async function () {
             );
           }
 
-          // 6️ Partners
+          // 6 Header Partners
           const partners = await tx.run(SELECT.from(SrvOrderPartner_H).where({ parent_ID: header.ID }));
           if (partners.length) {
             await tx.run(
@@ -226,7 +228,44 @@ module.exports = async function () {
             );
           }
 
-          // 7️ Appointments
+          // 7 Item Partners
+          if (items.length) {
+            const itemIDs = items.map(i => i.ID);
+            const itemPartners = await tx.run(
+              SELECT.from(SrvOrderPartner_I).where({ parent_ID: { in: itemIDs } })
+            );
+            if (itemPartners.length) {
+              await tx.run(
+                INSERT.into(SORD_Partner).entries(
+                  itemPartners.map(p => {
+                    const parentItem = items.find(i => i.ID === p.parent_ID);
+                    return {
+                      orderID: header.orderID,
+                      itemNo: parentItem?.itemNo || 0,
+                      partnerFunction: p.partnerFunction,
+                      partnerNumber: p.partnerNumber,
+                      partnerName: p.partnerName,
+                      isMainPartner: p.isMainPartner,
+                      numberType: p.numberType,
+                      functionCategory: p.functionCategory,
+                      houseNumber: p.houseNumber,
+                      streetName: p.streetName,
+                      cityName: p.cityName,
+                      region: p.region,
+                      postalCode: p.postalCode,
+                      country: p.country,
+                      dialCode: p.dialCode,
+                      phoneNumber: p.phoneNumber,
+                      phoneExtension: p.phoneExtension,
+                      emailAddress: p.emailAddress
+                    };
+                  })
+                )
+              );
+            }
+          }
+
+          // 8 Header Appointments
           const appts = await tx.run(SELECT.from(SrvOrderAppt_H).where({ parent_ID: header.ID }));
           let plannedFromDateTime, plannedFromTimeZone, plannedToDateTime, plannedToTimeZone;
           if (appts.length) {
@@ -244,7 +283,6 @@ module.exports = async function () {
               )
             );
 
-            // capture planned timestamps
             for (const a of appts) {
               if (a.apptType === 'SPLA_PLANFR') {
                 plannedFromDateTime = a.apptStartDateTime;
@@ -270,7 +308,33 @@ module.exports = async function () {
             }
           }
 
-          // 8️ Texts (header + items)
+          // 9 Item Appointments
+          if (items.length) {
+            const itemIDs = items.map(i => i.ID);
+            const itemAppts = await tx.run(
+              SELECT.from(SrvOrderAppt_I).where({ parent_ID: { in: itemIDs } })
+            );
+            if (itemAppts.length) {
+              await tx.run(
+                INSERT.into(SORD_Appt).entries(
+                  itemAppts.map(a => {
+                    const parentItem = items.find(i => i.ID === a.parent_ID);
+                    return {
+                      orderID: header.orderID,
+                      itemNo: parentItem?.itemNo || 0,
+                      apptType: a.apptType,
+                      apptStartDateTime: a.apptStartDateTime,
+                      apptStartTimeZone: a.apptStartTimeZone,
+                      apptEndDateTime: a.apptEndDateTime,
+                      apptEndTimeZone: a.apptEndTimeZone
+                    };
+                  })
+                )
+              );
+            }
+          }
+
+          //10 Texts (header + items)
           const [headerTexts, allItems] = await Promise.all([
             tx.run(SELECT.from(SrvOrderText_H).where({ parent_ID: header.ID })),
             tx.run(SELECT.from(SrvOrder_I).where({ parent_ID: header.ID }))
@@ -311,7 +375,7 @@ module.exports = async function () {
             await tx.run(INSERT.into(SORD_Text).entries(textEntries));
           }
 
-          // 9️ Mark as processed + log success
+          // 11 Mark as processed + log success
           await tx.run(
             UPDATE(SrvOrder_H).set({ processedFlag: true }).where({ ID: header.ID })
           );

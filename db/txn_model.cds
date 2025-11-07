@@ -1,6 +1,7 @@
 namespace txn;
 
 using {cuid, managed} from '@sap/cds/common';
+
 // ============================================================
 // ============================================================
 //  APPLICATION TABLES (Processed Data - Managed Fields)
@@ -80,6 +81,12 @@ entity SORD_I : managed {
         materialGroup2     : String(3);
         materialGroup2Desc : String(40);
 
+        partners            : Composition of many SORD_Partner
+                                on  partners.orderID = $self.orderID
+                                and partners.itemNo  = $self.itemNo;
+        appointments        : Composition of many SORD_Appt
+                                on  appointments.orderID = $self.orderID
+                                and appointments.itemNo  = $self.itemNo;
         texts              : Composition of many SORD_Text
                                  on  texts.orderID = $self.orderID
                                  and texts.itemNo  = $self.itemNo;
@@ -141,15 +148,4 @@ entity SORD_Text : managed {
 entity SORD_Comm : managed {
     key orderID        : String(35);
         messages       : String;
-}
-
-@cds.persistence.name: 'TXN_ETL_LOG'
-entity ETL_Log : managed {
-key ID              : UUID;
-msgID               : String(32);
-orderID             : String(35);
-msgCreatedDate      : Timestamp;
-status              : String(60);      // SUCCESS | FAILED
-message             : String;
-runTimestamp        : Timestamp = CURRENT_TIMESTAMP;
 }

@@ -1,4 +1,6 @@
-using { txn as db } from '../db/schema.cds';
+namespace txn;
+
+using { txn as db } from '../db/txn_model';
 
 service SrvOrd @(path: 'SrvOrd', requires: 'authenticated-user') {
 
