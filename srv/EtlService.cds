@@ -1,18 +1,10 @@
+
 using { stg as stg } from '../db/stage_model';
 using { txn as txn } from '../db/schema';
 using { managed} from '@sap/cds/common';
 
-service ETLService {
+service ETLService @(path: 'EtlService', requires: 'authenticated-user') {
   @readonly
   action runETL() returns String;
 
-    entity ETL_Log : managed {
-    key ID              : UUID;
-    msgID               : String(32);
-    orderID             : String(35);
-    msgCreatedDate      : Timestamp;
-    status              : String(10);      // SUCCESS | FAILED
-    message             : String;
-    runTimestamp        : Timestamp = CURRENT_TIMESTAMP;
-    }
 }

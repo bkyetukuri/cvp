@@ -1,4 +1,4 @@
-const cds = require('@sap/cds')
+const cds = require('@sap/cds');
 
 module.exports = async function () {
   const {
@@ -8,257 +8,344 @@ module.exports = async function () {
     SrvOrderAppt_H,
     SrvOrderText_H,
     SrvOrderText_I
-  } = cds.entities('stg')
+  } = cds.entities('stg');
 
   const {
     SORD_H,
     SORD_I,
     SORD_Partner,
     SORD_Appt,
-    SORD_Text
-  } = cds.entities('txn')
+    SORD_Text,
+    ETL_Log
+  } = cds.entities('txn');
 
-  const LOG = cds.log('etl')
-  const { ETL_Log } = cds.entities('ETL_Log')
+  //const { ETL_Log } = cds.entities('txn.ETL_Log'); 
+  const LOG = cds.log('etl');
 
-
-  this.on('runETL', async () => {
-    const tx = cds.transaction()
-    let successCount = 0, failCount = 0
-    
-    try {
-      // ----------------------------------------------------
-      // 1️⃣  Get latest message per orderID
-      // ----------------------------------------------------
-      const latestOrders = await SELECT `
-      orderID,
-      MAX(msgCreatedDate) as latestMsgDate
-    `.from(SrvOrder_H)
-     .where({ processedFlag: false })
-     .groupBy('orderID')
-
-      console.log(`Found ${latestOrders.length} unprocessed orders in staging.`)
-      //LOG.info(`Found ${latestOrders.length} unprocessed orders in staging.`)
-
-
-      // ----------------------------------------------------
-      // 2️⃣  Loop through each latest record
-      // ----------------------------------------------------
-      for (const o of latestOrders) {
-
-      const latestHeader = await SELECT.one.from(SrvOrder_H).where({
-        orderID: o.orderID,
-        msgCreatedDate: o.latestMsgDate
+  // Helper: standardized log insertion
+  async function insertLog(tx, { msgID, orderID, msgCreatedDate, status, message }) {
+    await tx.run(
+      INSERT.into(ETL_Log).entries({
+        ID: cds.utils.uuid(),
+        msgID,
+        orderID,
+        msgCreatedDate,
+        status,
+        message,
+        runTimestamp: new Date()
       })
+    );
+  }
 
+  // ----------------------------------------------------
+  // Action Handler: runETL
+  // ----------------------------------------------------
+  this.on('runETL', async (req) => {
+    const db = await cds.connect.to('db');
+    const tx = db.transaction(req);
 
-      if (!latestHeader) continue
+    let successCount = 0;
+    let failCount = 0;
+    let insUpd = "";
 
-        // 3️⃣ UPSERT header into target
-        await UPSERT.into(SORD_H).entries({
-          //ordSource: 'SO',
-          orderID: latestHeader.orderID,
-          LastUpdatedTSFromS4: latestHeader.msgCreatedDate,
-          orderType: latestHeader.orderType,
-          salesOrganization: latestHeader.salesOrganization,
-          distributionChannel: latestHeader.distributionChannel,
-          division: latestHeader.division,
-          salesOffice: latestHeader.salesOffice,
-          salesGroup: latestHeader.salesGroup,
-          description: latestHeader.description,
-          language: latestHeader.language,
-          soldToParty: latestHeader.soldToParty,
-          soldToPartyName: latestHeader.soldToPartyName,
-          serviceParty: latestHeader.serviceParty,
-          servicePartyName: latestHeader.servicePartyName,
-          requestType: latestHeader.requestType,
-          serviceType: latestHeader.serviceType,
-          serviceSubType: latestHeader.serviceSubType,
-          priority: latestHeader.priority,
-          fnaStatus: latestHeader.fnaStatus,
-          confirmationNeeded: latestHeader.confirmationNeeded,
-          requestedStartDateTime: latestHeader.requestedStartDateTime,
-          requestedEndDateTime: latestHeader.requestedEndDateTime,
-          documentDataTimestamp: latestHeader.documentDataTimestamp,
-          customerPO: latestHeader.customerPO,
-          customerRef10: latestHeader.customerRef10,
-          customerName3: latestHeader.customerName3
-          //printed: false
-        })
+    try {
+      // 1️ Get latest message per orderID (unprocessed only)
+      const latestOrders = await tx.run(
+        SELECT.from(SrvOrder_H)
+          .columns(
+            { ref: ['orderID'] },
+            { func: 'max', args: [{ ref: ['msgCreatedDate'] }], as: 'latestMsgDate' }
+          )
+          .where({ processedFlag: false })
+          .groupBy('orderID')
+      );
 
-        // ----------------------------------------------------
-        // 4️⃣  Refresh child data (items, partners, appts, texts)
-        // ----------------------------------------------------
-
-        // Optional: delete existing children for this order before re-inserting
-        await DELETE.from(SORD_I).where({ orderID: latestHeader.orderID })
-        await DELETE.from(SORD_Partner).where({ orderID: latestHeader.orderID })
-        await DELETE.from(SORD_Appt).where({ orderID: latestHeader.orderID })
-        await DELETE.from(SORD_Text).where({ orderID: latestHeader.orderID })
-
-        // 4.a Items
-        const items = await SELECT.from(SrvOrder_I).where({ parent_ID: latestHeader.ID })
-        for (const i of items) {
-          await UPSERT.into(SORD_I).entries({
-            orderID: latestHeader.orderID,
-            itemNo: i.itemNo,
-            parentItem: i.parentItem,
-            product: i.product,
-            productDesc: i.productDesc,
-            language: i.language,
-            quantity: i.quantity,
-            quantityUnit: i.quantityUnit,
-            itemCategory: i.itemCategory,
-            isOpen: i.isOpen,
-            isReleased: i.isReleased,
-            isCompleted: i.isCompleted,
-            isRejected: i.isRejected,
-            userStatus: i.userStatus,
-            fnaStatus: i.fnaStatus,
-            confirmationNeeded: i.confirmationNeeded,
-            frequency: i.frequency,
-            materialGroup2: i.materialGroup2,
-            materialGroup2Desc: i.materialGroup2Desc
-          })
-        }
-
-        // 4.b Partners
-        const partners = await SELECT.from(SrvOrderPartner_H).where({ parent_ID: latestHeader.ID })
-        for (const p of partners) {
-          await UPSERT.into(SORD_Partner).entries({
-            orderID: latestHeader.orderID,
-            itemNo: 0,
-            partnerFunction: p.partnerFunction,
-            partnerNumber: p.partnerNumber,
-            partnerName: p.partnerName,
-            isMainPartner: p.isMainPartner,
-            numberType: p.numberType,
-            functionCategory: p.functionCategory,
-            houseNumber: p.houseNumber,
-            streetName: p.streetName,
-            cityName: p.cityName,
-            region: p.region,
-            postalCode: p.postalCode,
-            country: p.country,
-            dialCode: p.dialCode,
-            phoneNumber: p.phoneNumber,
-            phoneExtension: p.phoneExtension,
-            emailAddress: p.emailAddress
-          })
-        }
-
-        // 4.c Appointments
-
-        let plannedFromDateTime, plannedFromTimeZone
-        let plannedToDateTime, plannedToTimeZone
-
-        const appts = await SELECT.from(SrvOrderAppt_H).where({ parent_ID: latestHeader.ID })
-        for (const a of appts) {
-          await UPSERT.into(SORD_Appt).entries({
-            orderID: latestHeader.orderID,
-            itemNo: 0,
-            apptType: a.apptType,
-            apptStartDateTime: a.apptStartDateTime,
-            apptStartTimeZone: a.apptStartTimeZone,
-            apptEndDateTime: a.apptEndDateTime,
-            apptEndTimeZone: a.apptEndTimeZone
-          })
-
-          if (a.apptType === 'SPLA_PLANFR') {
-            plannedFromDateTime = a.apptStartDateTime
-            plannedFromTimeZone = a.apptStartTimeZone
-          }
-
-          if (a.apptType === 'SPLA_PLANTO') {
-            plannedToDateTime = a.apptEndDateTime
-            plannedToTimeZone = a.apptEndTimeZone
-          }
-        }
-
-        // Update SORD_H with planned from/to info
-        if (plannedFromDateTime || plannedToDateTime) {
-          await UPDATE(SORD_H)
-            .set({
-              plannedFromDateTime,
-              plannedFromTimeZone,
-              plannedToDateTime,
-              plannedToTimeZone
-            })
-            .where({ orderID: latestHeader.orderID })
-        }
-        
-
-
-        // 4️⃣ Texts handling (Header + Item)
-        // ---- 4.d Header Texts ----
-        const headerTexts = await SELECT.from(SrvOrderText_H).where({ parent_ID: latestHeader.ID })
-        for (const t of headerTexts) {
-        await UPSERT.into(SORD_Text).entries({
-            orderID: latestHeader.orderID,
-            itemNo: null, // header-level → null
-            longTextTypeID: t.longTextTypeID,
-            text: t.text,
-            language: t.language
-        })
-        }
-
-        // ---- 4.e Item Texts ----
-        const stgItems = await SELECT.from(SrvOrder_I).where({ parent_ID: latestHeader.ID })
-
-        for (const i of stgItems) {
-        const itemTexts = await SELECT.from(SrvOrderText_I).where({ parent_ID: i.ID })
-        for (const it of itemTexts) {
-            await UPSERT.into(SORD_Text).entries({
-            orderID: latestHeader.orderID,
-            itemNo: i.itemNo, 
-            longTextTypeID: it.longTextTypeID,
-            text: it.text,
-            language: it.language
-            })
-        }
-        }
-
-        // Mark this staging record as processed
-        await UPDATE(SrvOrder_H)
-        .set({ processedFlag: true })
-        .where({ ID: latestHeader.ID })
+      if (!latestOrders.length) {
+        LOG.info('No new records found for ETL.');
+        return 'No unprocessed service orders found.';
       }
 
-      /*
-      // Periodically purge old processed data
-      await DELETE.from(SrvOrder_H)
-      .where({ processedFlag: true })
-      .and('msgCreatedDate <', new Date(Date.now() - 7*24*60*60*1000)); // older than 7 days
-      */
+      LOG.info(`Found ${latestOrders.length} unprocessed orders.`);
 
-      await tx.commit()
-      return `ETL completed: ${latestOrders.length} orders processed and flagged.`
-      //LOG.info(`Order ${latestHeader.orderID} (msgCreatedDate: ${latestHeader.msgCreatedDate}) processed successfully.`)
+      // 2 Process each latest header
+      for (const o of latestOrders) {
+        const header = await tx.run(
+          SELECT.one.from(SrvOrder_H).where({
+            orderID: o.orderID,
+            msgCreatedDate: o.latestMsgDate
+          })
+        );
 
-      // Write to ETL_Log
-      await INSERT.into(ETL_Log).entries({
-      msgID: latestHeader.msgID,
-      orderID: latestHeader.orderID,
-      msgCreatedDate: latestHeader.msgCreatedDate,
-      status: 'SUCCESS',
-      message: `${recordType} order processed successfully`
-      })
+        if (!header) continue;
 
+        try {
+          // 3️ Upsert Header (HANA-safe version)
+          const existing = await tx.run(
+            SELECT.one.from(SORD_H).where({ orderID: header.orderID })
+          );
+
+          if (existing) {
+            await tx.run(
+              UPDATE(SORD_H)
+                .set({
+                  ordSource: 'SO',
+                  LastUpdatedTSFromS4: header.msgCreatedDate,
+                  orderType: header.orderType,
+                  salesOrganization: header.salesOrganization,
+                  distributionChannel: header.distributionChannel,
+                  division: header.division,
+                  salesOffice: header.salesOffice,
+                  salesGroup: header.salesGroup,
+                  description: header.description,
+                  language: header.language,
+                  soldToParty: header.soldToParty,
+                  soldToPartyName: header.soldToPartyName,
+                  serviceParty: header.serviceParty,
+                  servicePartyName: header.servicePartyName,
+                  requestType: header.requestType,
+                  serviceType: header.serviceType,
+                  serviceSubType: header.serviceSubType,
+                  priority: header.priority,
+                  fnaStatus: header.fnaStatus,
+                  confirmationNeeded: header.confirmationNeeded,
+                  requestedStartDateTime: header.requestedStartDateTime,
+                  requestedEndDateTime: header.requestedEndDateTime,
+                  documentDataTimestamp: header.documentDataTimestamp,
+                  customerPO: header.customerPO,
+                  customerRef10: header.customerRef10,
+                  customerName3: header.customerName3
+                })
+                .where({ orderID: header.orderID })
+            );
+                insUpd = 'UPDATED';
+          } else {
+            await tx.run(
+              INSERT.into(SORD_H).entries({
+                orderID: header.orderID,
+                ordSource: 'SO',
+                LastUpdatedTSFromS4: header.msgCreatedDate,
+                orderType: header.orderType,
+                salesOrganization: header.salesOrganization,
+                distributionChannel: header.distributionChannel,
+                division: header.division,
+                salesOffice: header.salesOffice,
+                salesGroup: header.salesGroup,
+                description: header.description,
+                language: header.language,
+                soldToParty: header.soldToParty,
+                soldToPartyName: header.soldToPartyName,
+                serviceParty: header.serviceParty,
+                servicePartyName: header.servicePartyName,
+                requestType: header.requestType,
+                serviceType: header.serviceType,
+                serviceSubType: header.serviceSubType,
+                priority: header.priority,
+                fnaStatus: header.fnaStatus,
+                confirmationNeeded: header.confirmationNeeded,
+                requestedStartDateTime: header.requestedStartDateTime,
+                requestedEndDateTime: header.requestedEndDateTime,
+                documentDataTimestamp: header.documentDataTimestamp,
+                customerPO: header.customerPO,
+                customerRef10: header.customerRef10,
+                customerName3: header.customerName3
+              })
+            );
+              insUpd = 'INSERTED';
+          }
+
+          /*
+          // 4️ Delete existing children
+          await Promise.all([
+            tx.run(DELETE.from(SORD_Text).where({ orderID: header.orderID })),
+            tx.run(DELETE.from(SORD_Appt).where({ orderID: header.orderID })),
+            tx.run(DELETE.from(SORD_Partner).where({ orderID: header.orderID })),
+            tx.run(DELETE.from(SORD_I).where({ orderID: header.orderID }))
+          ]);
+          */
+          await tx.run(DELETE.from(SORD_Text).where({ orderID: header.orderID }));
+          await tx.run(DELETE.from(SORD_Appt).where({ orderID: header.orderID }));
+          await tx.run(DELETE.from(SORD_Partner).where({ orderID: header.orderID }));
+          await tx.run(DELETE.from(SORD_I).where({ orderID: header.orderID }));
+
+          // 5️ Items (bulk insert)
+          const items = await tx.run(SELECT.from(SrvOrder_I).where({ parent_ID: header.ID }));
+          if (items.length) {
+            await tx.run(
+              INSERT.into(SORD_I).entries(
+                items.map(i => ({
+                  orderID: header.orderID,
+                  itemNo: i.itemNo,
+                  parentItem: i.parentItem,
+                  product: i.product,
+                  productDesc: i.productDesc,
+                  language: i.language,
+                  quantity: i.quantity,
+                  quantityUnit: i.quantityUnit,
+                  itemCategory: i.itemCategory,
+                  isOpen: i.isOpen,
+                  isReleased: i.isReleased,
+                  isCompleted: i.isCompleted,
+                  isRejected: i.isRejected,
+                  userStatus: i.userStatus,
+                  fnaStatus: i.fnaStatus,
+                  confirmationNeeded: i.confirmationNeeded,
+                  frequency: i.frequency,
+                  materialGroup2: i.materialGroup2,
+                  materialGroup2Desc: i.materialGroup2Desc
+                }))
+              )
+            );
+          }
+
+          // 6️ Partners
+          const partners = await tx.run(SELECT.from(SrvOrderPartner_H).where({ parent_ID: header.ID }));
+          if (partners.length) {
+            await tx.run(
+              INSERT.into(SORD_Partner).entries(
+                partners.map(p => ({
+                  orderID: header.orderID,
+                  itemNo: 0,
+                  partnerFunction: p.partnerFunction,
+                  partnerNumber: p.partnerNumber,
+                  partnerName: p.partnerName,
+                  isMainPartner: p.isMainPartner,
+                  numberType: p.numberType,
+                  functionCategory: p.functionCategory,
+                  houseNumber: p.houseNumber,
+                  streetName: p.streetName,
+                  cityName: p.cityName,
+                  region: p.region,
+                  postalCode: p.postalCode,
+                  country: p.country,
+                  dialCode: p.dialCode,
+                  phoneNumber: p.phoneNumber,
+                  phoneExtension: p.phoneExtension,
+                  emailAddress: p.emailAddress
+                }))
+              )
+            );
+          }
+
+          // 7️ Appointments
+          const appts = await tx.run(SELECT.from(SrvOrderAppt_H).where({ parent_ID: header.ID }));
+          let plannedFromDateTime, plannedFromTimeZone, plannedToDateTime, plannedToTimeZone;
+          if (appts.length) {
+            await tx.run(
+              INSERT.into(SORD_Appt).entries(
+                appts.map(a => ({
+                  orderID: header.orderID,
+                  itemNo: 0,
+                  apptType: a.apptType,
+                  apptStartDateTime: a.apptStartDateTime,
+                  apptStartTimeZone: a.apptStartTimeZone,
+                  apptEndDateTime: a.apptEndDateTime,
+                  apptEndTimeZone: a.apptEndTimeZone
+                }))
+              )
+            );
+
+            // capture planned timestamps
+            for (const a of appts) {
+              if (a.apptType === 'SPLA_PLANFR') {
+                plannedFromDateTime = a.apptStartDateTime;
+                plannedFromTimeZone = a.apptStartTimeZone;
+              }
+              if (a.apptType === 'SPLA_PLANTO') {
+                plannedToDateTime = a.apptEndDateTime;
+                plannedToTimeZone = a.apptEndTimeZone;
+              }
+            }
+
+            if (plannedFromDateTime || plannedToDateTime) {
+              await tx.run(
+                UPDATE(SORD_H)
+                  .set({
+                    plannedFromDateTime,
+                    plannedFromTimeZone,
+                    plannedToDateTime,
+                    plannedToTimeZone
+                  })
+                  .where({ orderID: header.orderID })
+              );
+            }
+          }
+
+          // 8️ Texts (header + items)
+          const [headerTexts, allItems] = await Promise.all([
+            tx.run(SELECT.from(SrvOrderText_H).where({ parent_ID: header.ID })),
+            tx.run(SELECT.from(SrvOrder_I).where({ parent_ID: header.ID }))
+          ]);
+
+          const itemTextMap = {};
+          if (allItems.length) {
+            const itemIDs = allItems.map(i => i.ID);
+            const itemTexts = await tx.run(
+              SELECT.from(SrvOrderText_I).where({ parent_ID: { in: itemIDs } })
+            );
+            for (const it of itemTexts) {
+              itemTextMap[it.parent_ID] ??= [];
+              itemTextMap[it.parent_ID].push(it);
+            }
+          }
+
+          const textEntries = [
+            ...headerTexts.map(t => ({
+              orderID: header.orderID,
+              itemNo: 0,
+              longTextTypeID: t.longTextTypeID,
+              text: t.text,
+              language: t.language
+            })),
+            ...allItems.flatMap(i =>
+              (itemTextMap[i.ID] || []).map(it => ({
+                orderID: header.orderID,
+                itemNo: i.itemNo,
+                longTextTypeID: it.longTextTypeID,
+                text: it.text,
+                language: it.language
+              }))
+            )
+          ];
+
+          if (textEntries.length) {
+            await tx.run(INSERT.into(SORD_Text).entries(textEntries));
+          }
+
+          // 9️ Mark as processed + log success
+          await tx.run(
+            UPDATE(SrvOrder_H).set({ processedFlag: true }).where({ ID: header.ID })
+          );
+
+          await insertLog(tx, {
+            msgID: header.msgID,
+            orderID: header.orderID,
+            msgCreatedDate: header.msgCreatedDate,
+            status: insUpd,
+            message: 'Order processed successfully'
+          });
+
+          successCount++;
+        } catch (err) {
+          failCount++;
+          LOG.error(`Failed processing order ${header.orderID}: ${err.message}`);
+          await insertLog(tx, {
+            msgID: header.msgID,
+            orderID: header.orderID,
+            msgCreatedDate: header.msgCreatedDate,
+            status: 'FAILED',
+            message: err.message
+          });
+        }
+      }
+
+      await tx.commit();
+      const summary = `ETL completed: ${successCount} success, ${failCount} failed`;
+      LOG.info(summary);
+      return summary;
     } catch (err) {
-      await tx.rollback()
-      console.error(err)
-      //LOG.error(`Failed processing order ${latestHeader.orderID} (msgCreatedDate: ${latestHeader.msgCreatedDate}) — ${err.message}`)
-      
-
-      await INSERT.into(ETL_Log).entries({
-      msgID: latestHeader.msgID,
-      orderID: latestHeader.orderID,
-      msgCreatedDate: latestHeader.msgCreatedDate,
-      status: 'FAILED',
-      message: err.message
-      })
-
-      return `ETL failed: ${err.message}`
+      await tx.rollback();
+      LOG.error('ETL failed: ' + err.message);
+      throw err;
     }
-  })
-}
+  });
+};

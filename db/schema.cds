@@ -3,7 +3,7 @@ namespace txn;
 using {cuid, managed} from '@sap/cds/common';
 // ============================================================
 // ============================================================
-//  STAGING TABLES (Raw Payload Layer - No Managed Fields)
+//  APPLICATION TABLES (Processed Data - Managed Fields)
 // ============================================================
 // ============================================================
 
@@ -141,4 +141,15 @@ entity SORD_Text : managed {
 entity SORD_Comm : managed {
     key orderID        : String(35);
         messages       : String;
+}
+
+@cds.persistence.name: 'TXN_ETL_LOG'
+entity ETL_Log : managed {
+key ID              : UUID;
+msgID               : String(32);
+orderID             : String(35);
+msgCreatedDate      : Timestamp;
+status              : String(60);      // SUCCESS | FAILED
+message             : String;
+runTimestamp        : Timestamp = CURRENT_TIMESTAMP;
 }

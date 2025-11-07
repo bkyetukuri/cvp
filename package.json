@@ -2,11 +2,17 @@
   "name": "cvp",
   "version": "1.0.0",
   "description": "Cintas Vendor Portal project.",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@cap-js/hana": "^2",
     "@sap/cds": "^9",
     "@sap/xssec": "^4",
-    "express": "^4"
+    "express": "^4",
+    "node-cron": "^4.2.1"
   },
   "devDependencies": {
     "@cap-js/sqlite": "^2",
@@ -15,28 +21,24 @@
   "scripts": {
     "start": "cds-serve"
   },
-  "private": true,
   "cds": {
     "requires": {
-      "[production]": {
-        "auth": {
-          "strategy": "JWT",
+      "auth": {
+        "[production]": {
           "kind": "xsuaa",
+          "strategy": "JWT",
           "credentials": {
             "xsappname": "cvp"
           }
-        }
-      },
-      "[development]": {
-        "auth": {
+        },
+        "[development]": {
           "strategy": "mocked",
           "users": {
             "Kiran": {
               "roles": [
                 "Viewer",
                 "Editor"
-              ],
-              "userAttributes": {}
+              ]
             },
             "Vidhya": {
               "roles": [
@@ -48,28 +50,15 @@
         }
       }
     },
+    "hana": {
+      "sql_mapping": "plain"
+    },
+    "sqlite": {
+      "sql_mapping": "plain"
+    },
     "sql": {
       "names": "plain",
       "native_hana_associations": false
-    },
-    "data": {
-      "sql_mapping": "plain"
-    },
-    "[production]": {
-      "sql": {
-        "names": "plain"
-      },
-      "data": {
-        "sql_mapping": "plain"
-      }
-    },
-    "[hana]": {
-      "sql": {
-        "names": "plain"
-      },
-      "data": {
-        "sql_mapping": "plain"
-      }
     }
   }
 }

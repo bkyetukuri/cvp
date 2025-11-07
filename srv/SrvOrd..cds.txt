@@ -1,0 +1,35 @@
+using { txn as db } from '../db/schema.cds';
+
+service SrvOrd @(path: 'SrvOrd', requires: 'authenticated-user') {
+
+  /**
+   * Root Header entity
+   */
+  entity Header as projection on db.SORD_H;
+
+  /**
+   * Item-level details for each service order
+   */
+  entity Items as projection on db.SORD_I;
+
+  /**
+   * Partner details associated with service orders
+   */
+  entity Partners as projection on db.SORD_Partner;
+
+  /**
+   * Appointment/scheduling details
+   */
+  entity Appointments as projection on db.SORD_Appt;
+
+  /**
+   * Header,Item-level text information
+   */
+  entity Texts as projection on db.SORD_Text;
+
+  /**
+   * Service Order Communication information
+   */
+  entity Comms as projection on db.SORD_Comm;
+
+}

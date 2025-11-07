@@ -85,7 +85,7 @@ entity SrvOrder_I : cuid {
     isRejected         : Boolean;
     userStatus         : String(5);
     fnaStatus          : String(3);
-    confirmationNeeded : String;
+    confirmationNeeded : Boolean;
     frequency          : String;
     materialGroup2     : String(3);
     materialGroup2Desc : String(40);

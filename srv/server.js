@@ -1,11 +1,24 @@
+// srv/server.js
 const cds = require('@sap/cds');
-const express = require('express');
 
-cds.on('bootstrap', app => {
+require('./cron-etl');  // ensure cron-etl.js runs on startup
+
+cds.on('bootstrap', (app) => {
   app.get('/triggerETL', async (req, res) => {
-    const srv = await cds.connect.to('EtlService');
-    const result = await srv.run(EtlService.runETL());
-    res.send(result);
+    try {
+      const srv = await cds.connect.to('ETLService');
+      const result = await srv.send('runETL');
+      res.status(200).send({
+        status: 'SUCCESS',
+        message: result || 'ETL executed successfully.'
+      });
+    } catch (err) {
+      console.error('ETL trigger failed:', err);
+      res.status(500).send({
+        status: 'FAILED',
+        message: err.message
+      });
+    }
   });
 });
 
