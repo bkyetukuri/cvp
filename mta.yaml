@@ -11,6 +11,23 @@ build-parameters:
         - npm ci
         - npx cds build --production
 modules:
+  - name: cvp-ui
+    type: nodejs
+    path: app
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    build-parameters:
+      builder: npm-ci
+    requires:
+      - name: cvp-auth
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          strictSSL: true
+          forwardAuthToken: true
+          url: '~{srv-url}'
   - name: cvp-srv
     type: nodejs
     path: gen/srv
@@ -26,7 +43,6 @@ modules:
     requires:
       - name: cvp-auth
       - name: cvp-db
-
   - name: cvp-db-deployer
     type: hdb
     path: gen/db
@@ -34,7 +50,26 @@ modules:
       buildpack: nodejs_buildpack
     requires:
       - name: cvp-db
-
+  - name: cvp-app-router
+    type: approuter.nodejs
+    path: app/
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: cvp-auth
+    provides:
+      - name: app-api
+        properties:
+          app-protocol: ${protocol}
+          app-uri: ${default-uri}
 resources:
   - name: cvp-auth
     type: org.cloudfoundry.managed-service

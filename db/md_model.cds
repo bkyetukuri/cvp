@@ -32,5 +32,5 @@ namespace md;
  
         // explicit FK column + association for joins
         formId        : String(60) not null;
-        form : Association to FORM on form.formId = formId;
+        form          : Association to FORM on form.formId = formId;
     }
